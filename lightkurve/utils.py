@@ -484,11 +484,7 @@ def detect_filetype(header):
     try:
         # use `telescop` keyword to determine mission
         # and `creator` to determine tpf or lc
-        if 'TELESCOP' in header.keys():
-            telescop = header['telescop'].lower()
-        else:
-            # Some old custom TESS data did not define the `TELESCOP` card
-            telescop = header['mission'].lower()
+        telescop = header['telescop'].lower()
         creator = header['creator'].lower()
         origin = header['origin'].lower()
         if telescop == 'kepler':
@@ -496,8 +492,7 @@ def detect_filetype(header):
             if 'targetpixel' in creator:
                 return 'KeplerTargetPixelFile'
             # Kepler LCFs will contain "FluxExporter2PipelineModule"
-            elif ('fluxexporter' in creator or 'lightcurve' in creator
-                or 'lightcurve' in creator):
+            elif 'fluxexporter' in creator or 'lightcurve' in creator:
                 return 'KeplerLightCurveFile'
         elif telescop == 'tess':
             # TESS TPFs will contain "TargetPixelExporterPipelineModule"
