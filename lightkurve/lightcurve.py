@@ -1632,5 +1632,6 @@ class TessLightCurve(LightCurve):
             hdu.writeto(path, overwrite=overwrite, checksum=True)
         else:
             return hdu
-	def PDM():
-    		print("Hello!")
+    def hello_printer():
+        print("Hello world!")
+    name = "John"
