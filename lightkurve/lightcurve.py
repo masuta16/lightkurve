@@ -1031,8 +1031,7 @@ class LightCurve(object):
         Optional keywords accepted if ``method='lombscargle'`` are:
             ``minimum_frequency``, ``maximum_frequency``, ``mininum_period``,
             ``maximum_period``, ``frequency``, ``period``, ``nterms``,
-            ``nyquist_factor``, ``oversample_factor``, ``freq_unit``,
-            ``normalization``.
+            ``nyquist_factor``, ``oversample_factor``, ``freq_unit``.
 
         Optional keywords accepted for ``method='bls'`` are:
             ``minimum_period``, ``maximum_period``, ``period``,
@@ -1147,10 +1146,10 @@ class LightCurve(object):
 
             # Override the defaults where necessary
             from . import __version__
-            default = {'ORIGIN': "Unofficial data product",
-                         'DATE': datetime.datetime.now().strftime("%Y-%m-%d"),
-                         'CREATOR': "lightkurve.LightCurve.to_fits()",
-                         'PROCVER': str(__version__)}
+            default = default = {'ORIGIN': "Unofficial data product",
+                                 'DATE': datetime.datetime.now().strftime("%Y-%m-%d"),
+                                 'CREATOR': "lightkurve.LightCurve.to_fits()",
+                                 'PROCVER': str(__version__)}
 
             for kw in default:
                 hdu.header['{}'.format(kw).upper()] = default[kw]
@@ -1594,16 +1593,13 @@ class TessLightCurve(LightCurve):
         hdu : astropy.io.fits
             Returns an astropy.io.fits object if path is None
         """
+        # TODO: populate more TESS specific metadata
+
         tess_specific_data = {
             'OBJECT': '{}'.format(self.targetid),
             'MISSION': self.mission,
             'RA_OBJ': self.ra,
-            'TELESCOP': self.mission,
-            'CAMERA': self.camera,
-            'CCD': self.ccd,
-            'SECTOR': self.sector,
-            'TARGETID': self.targetid,
-            'DEC_OBJ': self.dec}
+            'DEC_OBJ': self.dec} # ... insert more here!
 
         def _make_aperture_extension(hdu_list, aperture_mask):
             """Create the 'APERTURE' extension (e.g. extension #2)."""
@@ -1622,16 +1618,12 @@ class TessLightCurve(LightCurve):
                                                     overwrite=overwrite,
                                                     **extra_data)
 
-        # We do this because the TESS file format is subtly different in the
-        #    name of this column.
-        hdu[1].columns.change_name('SAP_QUALITY', 'QUALITY')
-
         hdu = _make_aperture_extension(hdu, aperture_mask)
 
         if path is not None:
             hdu.writeto(path, overwrite=overwrite, checksum=True)
         else:
             return hdu
-    def hello_printer():
-        print("Hello world!")
-    name = "John"
+# Define a function
+def world():
+    print("Hello, World!")

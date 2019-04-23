@@ -91,18 +91,6 @@ class LightCurveFile(object):
         types = [n for n in types if not ('ERR' in n)]
         return types
 
-    def _get_quality(self):
-        """Returns the quality flag vector, which may go by different names
-        """
-        if 'QUALITY' in self.hdu[1].data.columns.names:
-            quality_vector = self.hdu[1].data['QUALITY']
-        elif 'SAP_QUALITY' in self.hdu[1].data.columns.names:
-            quality_vector = self.hdu[1].data['SAP_QUALITY']
-        else:
-            quality_vector = np.zeros(len(self.hdu[1].data['TIME']))
-        return quality_vector
-
-
     def plot(self, flux_types=None, style='lightkurve', **kwargs):
         """Plot all the light curves contained in this light curve file.
 
@@ -255,12 +243,6 @@ class KeplerLightCurveFile(LightCurveFile):
         return bkjd_to_astropy_time(bkjd=self.time)
 
     def get_lightcurve(self, flux_type, centroid_type='MOM_CENTR'):
-        if centroid_type+"1" in self.hdu[1].data.columns.names:
-            centroid_col = self.hdu[1].data[centroid_type + "1"][self.quality_mask]
-            centroid_row = self.hdu[1].data[centroid_type + "2"][self.quality_mask]
-        else:
-            centroid_col = np.repeat(np.NaN, self.quality_mask.sum())
-            centroid_row = np.repeat(np.NaN, self.quality_mask.sum())
         if flux_type in self._flux_types():
             # We did not import lightcurve at the top to prevent circular imports
             from .lightcurve import KeplerLightCurve
@@ -270,9 +252,9 @@ class KeplerLightCurveFile(LightCurveFile):
                 time_scale='tdb',
                 flux=self.hdu[1].data[flux_type][self.quality_mask],
                 flux_err=self.hdu[1].data[flux_type + "_ERR"][self.quality_mask],
-                centroid_col=centroid_col,
-                centroid_row=centroid_row,
-                quality=self._get_quality()[self.quality_mask],
+                centroid_col=self.hdu[1].data[centroid_type + "1"][self.quality_mask],
+                centroid_row=self.hdu[1].data[centroid_type + "2"][self.quality_mask],
+                quality=self.hdu[1].data['SAP_QUALITY'][self.quality_mask],
                 quality_bitmask=self.quality_bitmask,
                 channel=self.channel,
                 campaign=self.campaign,
@@ -285,7 +267,7 @@ class KeplerLightCurveFile(LightCurveFile):
                 dec=self.dec)
         else:
             raise KeyError("{} is not a valid flux type. Available types are: {}".
-                           format(flux_type, self._flux_types()))
+                           format(flux_type, self._flux_types))
 
     @property
     def channel(self):
@@ -399,9 +381,8 @@ class TessLightCurveFile(LightCurveFile):
 
         self.quality_bitmask = quality_bitmask
         self.quality_mask = TessQualityFlags.create_quality_mask(
-                        quality_array=self._get_quality(),
-                        bitmask=quality_bitmask)
-
+                                quality_array=self.hdu[1].data['QUALITY'],
+                                bitmask=quality_bitmask)
         # Early TESS releases had cadences with time=NaN (i.e. missing data)
         # which were not flagged by a QUALITY flag yet; the line below prevents
         # these cadences from being used. They would break most methods!
@@ -416,13 +397,6 @@ class TessLightCurveFile(LightCurveFile):
         return('TessLightCurveFile(TICID: {})'.format(self.targetid))
 
     def get_lightcurve(self, flux_type, centroid_type='MOM_CENTR'):
-        if centroid_type+"1" in self.hdu[1].data.columns.names:
-            centroid_col = self.hdu[1].data[centroid_type + "1"][self.quality_mask]
-            centroid_row = self.hdu[1].data[centroid_type + "2"][self.quality_mask]
-        else:
-            centroid_col = np.repeat(np.NaN, self.quality_mask.sum())
-            centroid_row = np.repeat(np.NaN, self.quality_mask.sum())
-
         if flux_type in self._flux_types():
             # We did not import TessLightCurve at the top to prevent circular imports
             from .lightcurve import TessLightCurve
@@ -432,13 +406,17 @@ class TessLightCurveFile(LightCurveFile):
                 time_scale='tdb',
                 flux=self.hdu[1].data[flux_type][self.quality_mask],
                 flux_err=self.hdu[1].data[flux_type + "_ERR"][self.quality_mask],
-                centroid_col=centroid_col,
-                centroid_row=centroid_row,
-                quality=self._get_quality()[self.quality_mask],
+                centroid_col=self.hdu[1].data[centroid_type + "1"][self.quality_mask],
+                centroid_row=self.hdu[1].data[centroid_type + "2"][self.quality_mask],
+                quality=self.hdu[1].data['QUALITY'][self.quality_mask],
                 quality_bitmask=self.quality_bitmask,
                 cadenceno=self.cadenceno,
                 targetid=self.targetid,
                 label=self.hdu[0].header['OBJECT'])
         else:
             raise KeyError("{} is not a valid flux type. Available types are: {}".
-                           format(flux_type, self._flux_types()))
+                           format(flux_type, self._flux_types))
+
+# Define a function
+def world():
+    print("Hello, World!")
